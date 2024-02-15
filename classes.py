@@ -24,7 +24,7 @@ class Tile:
 
 @dataclass
 class Board:
-    tiles: list[list[Tile]] = [[Tile(type=TileType.KING)]]
+    tiles: list[list[Tile]] = field(default_factory=[[Tile(type=TileType.KING)]])
 
     def up(self, x, y):
         return self.tiles[x - 1][y]
