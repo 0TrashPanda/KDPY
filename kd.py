@@ -1,6 +1,7 @@
-from classes import *
+from classes import Player, Board, Domino, StackPeace
 import random
 import os
+import curses
 
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -13,7 +14,7 @@ def chose_tile(player, stack):
     tile = int(input("choose a tile: "))
     if stack[tile].player_id != None:
         input("Tile already taken")
-        chose_tile(player)
+        chose_tile(player, stack)
     stack[tile].player_id = player.id
     stack[tile].player_name = player.name
 
@@ -31,11 +32,44 @@ def get_player(player_id):
         if player.id == player_id:
             return player
 
-def show_board(player):
-    for i in range(5):
-        for j in range(5):
-            print(f"{player.board.tiles[i][j].type.name}\t", end="")
-        print()
+def interactive_board(stdscr, board, domino):
+    curses.curs_set(0)
+    stdscr.clear()
+    stdscr.addstr(0, 0, str(board))
+    x0, y0, x1, y1 = 0, 0, 1, 0
+    stdscr.addstr(y0, x0, domino.tile0.type.value)
+    stdscr.addstr(y1, x1, domino.tile1.type.value)
+    stdscr.refresh()
+    while True:
+        key = stdscr.getch()
+        if key == curses.KEY_UP:
+            ofset = board.up(x0, y0, x1, y1)
+            x0, y0, x1, y1 = ofset[0], ofset[1], ofset[2], ofset[3]
+        elif key == curses.KEY_DOWN:
+            ofset = board.down(x0, y0, x1, y1)
+            x0, y0, x1, y1 = ofset[0], ofset[1], ofset[2], ofset[3]
+        elif key == curses.KEY_LEFT:
+            ofset = board.left(x0, y0, x1, y1)
+            x0, y0, x1, y1 = ofset[0], ofset[1], ofset[2], ofset[3]
+        elif key == curses.KEY_RIGHT:
+            ofset = board.right(x0, y0, x1, y1)
+            x0, y0, x1, y1 = ofset[0], ofset[1], ofset[2], ofset[3]
+        elif key == ord('r') or key == ord(' '):
+            ofset = board.rotate(x0, y0, x1, y1)
+            x0, y0, x1, y1 = ofset[0], ofset[1], ofset[2], ofset[3]
+        elif key == curses.KEY_ENTER or key == 10:
+            if board.place(x0, y0, x1, y1, tile0=domino.tile0, tile1=domino.tile1):
+                break
+            else:
+                stdscr.addstr(0, 0, "Invalid placement")
+                stdscr.refresh()
+                stdscr.getch()
+        stdscr.clear()
+        stdscr.addstr(0, 0, str(board))
+        stdscr.addstr(y0, x0, domino.tile0.type.value)
+        stdscr.addstr(y1, x1, domino.tile1.type.value)
+        stdscr.refresh()
+
 
 def place_domino(stack, index):
     clear()
@@ -43,7 +77,8 @@ def place_domino(stack, index):
     print(f"{player.name} place a domino")
     domino = stack[index].domino
     print(f"{domino.tile0.type.name}\t{domino.tile1.type.name}")
-    show_board(player)
+    print(player.board)
+    curses.wrapper(interactive_board, player.board, domino)
 
 clear()
 # players = int(input("Enter the number of players: "))
