@@ -1,24 +1,42 @@
 from classes import Player, Board, Domino, StackPeace
 import random
 import os
-import curses
+import unicurses
 
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
+    pass
 
-def chose_tile(player, stack):
+def choose_tile(player, stack):
     clear()
     print(f"{player.name} choose a tile")
     for index, domino in enumerate(stack):
-        print(f"{index}\t\t{domino.domino.tile0.type.value}\t{domino.domino.tile1.type.value}\t\t{domino.player_name if domino.player_id != None else ''}".expandtabs(2))
-    tile = int(input("choose a tile: "))
-    if stack[tile].player_id != None:
-        input("Tile already taken")
-        chose_tile(player, stack)
+        print(f"{index + 1}\t\t{domino.domino.tile0}\t{domino.domino.tile1}\t\t{domino.player_name if domino.player_id != None else ''}".expandtabs(2))
+    tile_str = input("choose a tile: ")
+    if not tile_str.strip():  # Check if the input is empty
+            input("Input cannot be empty. Please enter a number.")
+            choose_tile(player, stack)
+            return
+    try:
+        tile = int(tile_str) - 1
+    except ValueError:
+        input("Invalid input. Please enter a number.")
+        choose_tile(player, stack)
+        return
+
+    if tile < 0 or tile >= len(stack):
+        input("Invalid tile. Please choose a tile within the range.")
+        choose_tile(player, stack)
+        return
+
+    if stack[tile].player_id is not None:
+        input("Tile already taken. Please choose another tile.")
+        choose_tile(player, stack)
+        return
     stack[tile].player_id = player.id
     stack[tile].player_name = player.name
 
-def new_stack():
+def get_new_stack():
     stack = []
     for _ in range(total_kings):
         stack.append(StackPeace(Domino()))
@@ -32,43 +50,56 @@ def get_player(player_id):
         if player.id == player_id:
             return player
 
-def interactive_board(stdscr, board, domino):
-    curses.curs_set(0)
-    stdscr.clear()
-    stdscr.addstr(0, 0, str(board))
-    x0, y0, x1, y1 = 0, 0, 1, 0
-    stdscr.addstr(y0, x0, domino.tile0.type.value)
-    stdscr.addstr(y1, x1, domino.tile1.type.value)
-    stdscr.refresh()
+def interactive_board(board, domino, player):
+    unicurses.initscr()
+    unicurses.curs_set(0)
+    unicurses.clear()
+    unicurses.noecho()
+    unicurses.cbreak()
+
+    unicurses.mvaddstr(0, 0, player.name)
+    unicurses.mvaddstr(1, 0, str(board))
+    y0, x0, y1, x1 = 2, 1, 2, 2
+    unicurses.mvaddstr(y0, x0, domino.tile0)
+    unicurses.mvaddstr(y1, x1, domino.tile1)
+    y0, x0, y1, x1 = 0, 0, 0, 1
+    unicurses.refresh()
+    msg = ""
     while True:
-        key = stdscr.getch()
-        if key == curses.KEY_UP:
-            ofset = board.up(x0, y0, x1, y1)
-            x0, y0, x1, y1 = ofset[0], ofset[1], ofset[2], ofset[3]
-        elif key == curses.KEY_DOWN:
-            ofset = board.down(x0, y0, x1, y1)
-            x0, y0, x1, y1 = ofset[0], ofset[1], ofset[2], ofset[3]
-        elif key == curses.KEY_LEFT:
-            ofset = board.left(x0, y0, x1, y1)
-            x0, y0, x1, y1 = ofset[0], ofset[1], ofset[2], ofset[3]
-        elif key == curses.KEY_RIGHT:
-            ofset = board.right(x0, y0, x1, y1)
-            x0, y0, x1, y1 = ofset[0], ofset[1], ofset[2], ofset[3]
+        key = unicurses.getch()
+        if key == ord('w'):
+            ofset = board.up(y0, x0, y1, x1)
+            y0, x0, y1, x1 = ofset[0], ofset[1], ofset[2], ofset[3]
+        elif key == ord('r'):
+            ofset = board.down(y0, x0, y1, x1)
+            y0, x0, y1, x1 = ofset[0], ofset[1], ofset[2], ofset[3]
+        elif key == ord('a'):
+            ofset = board.left(y0, x0, y1, x1)
+            y0, x0, y1, x1 = ofset[0], ofset[1], ofset[2], ofset[3]
+        elif key == ord('s'):
+            ofset = board.right(y0, x0, y1, x1)
+            y0, x0, y1, x1 = ofset[0], ofset[1], ofset[2], ofset[3]
         elif key == ord('r') or key == ord(' '):
-            ofset = board.rotate(x0, y0, x1, y1)
-            x0, y0, x1, y1 = ofset[0], ofset[1], ofset[2], ofset[3]
-        elif key == curses.KEY_ENTER or key == 10:
-            if board.place(x0, y0, x1, y1, tile0=domino.tile0, tile1=domino.tile1):
+            ofset = board.rotate(y0, x0, y1, x1)
+            y0, x0, y1, x1 = ofset[0], ofset[1], ofset[2], ofset[3]
+        elif key == 10:
+            if board.place(y0, x0, y1, x1, tile0=domino.tile0, tile1=domino.tile1):
                 break
             else:
-                stdscr.addstr(0, 0, "Invalid placement")
-                stdscr.refresh()
-                stdscr.getch()
-        stdscr.clear()
-        stdscr.addstr(0, 0, str(board))
-        stdscr.addstr(y0, x0, domino.tile0.type.value)
-        stdscr.addstr(y1, x1, domino.tile1.type.value)
-        stdscr.refresh()
+                msg = "Invalid placement"
+        elif key == ord('x'):
+            break
+
+        unicurses.clear()
+        unicurses.mvaddstr(0, 0, player.name)
+        unicurses.mvaddstr(1, 0, str(board))
+        unicurses.mvaddstr(y0 + 2, x0 + 1, domino.tile0)
+        unicurses.mvaddstr(y1 + 2, x1 + 1, domino.tile1)
+        if msg:
+            unicurses.mvaddstr(0, 0, msg)
+            msg = ""
+        unicurses.refresh()
+    unicurses.endwin()
 
 
 def place_domino(stack, index):
@@ -76,9 +107,10 @@ def place_domino(stack, index):
     player = get_player(stack[index].player_id)
     print(f"{player.name} place a domino")
     domino = stack[index].domino
-    print(f"{domino.tile0.type.name}\t{domino.tile1.type.name}")
+    print(f"{domino.tile0}\t{domino.tile1}")
     print(player.board)
-    curses.wrapper(interactive_board, player.board, domino)
+    interactive_board(player.board, domino, player)
+    return stack[index].player_id
 
 clear()
 # players = int(input("Enter the number of players: "))
@@ -110,12 +142,14 @@ random.shuffle(player_cage)
 if players == 2:
     player_cage += player_cage
 
-old_stack = new_stack()
-for i in player_cage:
-    chose_tile(i, old_stack)
+old_stack = get_new_stack()
+for player in player_cage:
+    choose_tile(player, old_stack)
 
 while cards > 0:
-    stack = new_stack()
+    new_stack = get_new_stack()
     for i in range(total_kings):
-        player = place_domino(old_stack, i)
-        chose_tile(player, stack)
+        player_id = place_domino(old_stack, i)
+        player = get_player(player_id)
+        choose_tile(player, new_stack)
+    old_stack = new_stack

@@ -4,14 +4,14 @@ import random
 import numpy as np
 
 class TileType(Enum):
-    EMPTY = " "
-    KING = "👑"
-    FORREST = "🌲"
-    DESERT = "🏜️"
-    WHEAT = "🌾"
-    WATER = "🌊"
-    PLAINS = "🌿"
-    MINES = "⛏️"
+    EMPTY = [" "]
+    KING = ["K"] # ["👑"]
+    FOREST = ["A", "Ȧ", "Ä"] # ["🌴", "🌲", "🎄"]
+    DESERT = ["O", "Ȯ", "Ö"] # ["🏜️", "⛱️", "🏖️"]
+    WHEAT = ["W", "Ẇ", "Ẅ"] # ["🌾", "🍞", "🥪"]
+    WATER = ["U", "Ȗ", "Ü"] # ["💧", "🌊", "🏊"]
+    PLAINS = ["Y", "Ẏ", "Ÿ"] # ["🌿", "☘️", "🍀"]
+    MINES = ["X", "Ẋ", "Ẍ"] # ["⛏️", "🛠️", "⚒️"]
 
 @dataclass
 class Tile:
@@ -23,46 +23,54 @@ class Tile:
         if self.crowns is None:
             self.crowns = np.random.binomial(2, float(self.number) / 200)
 
+    def __str__(self):
+        return self.type.value[self.crowns]
+
 @dataclass
 class Board:
     tiles: list[list[Tile]] = field(default_factory=lambda: [[Tile(type=TileType.KING) if (x, y) == (2, 2) else Tile(type=TileType.EMPTY) for x in range(5)] for y in range(5)])
 
     def __str__(self):
-        return "\n".join(" ".join(tile.type.value for tile in row) for row in self.tiles)
+        bordered_tiles = [["╔"] + ["═"] * len(self.tiles[0]) + ["╗"]]  # Top border
+        bordered_tiles += [["║"] + [str(tile) for tile in row] + ["║"] for row in self.tiles]  # Tiles with side borders
+        bordered_tiles.append(["╚"] + ["═"] * len(self.tiles[0]) + ["╝"])  # Bottom border
+        return "\n".join("".join(row) for row in bordered_tiles)
 
-    def place(self, x0, y0, x1, y1, tile0, tile1):
+
+    def place(self, y0, x0, y1, x1, tile0, tile1):
         if self.tiles[y0][x0].type != TileType.EMPTY or self.tiles[y1][x1].type != TileType.EMPTY:
             return False
-        if not self.naibour(x0, y0, tile0) and not self.naibour(x1, y1, tile1):
+        if not self.naibour(y0, x0, tile0) and not self.naibour(y1, x1, tile1):
             return False
         self.tiles[y0][x0] = tile0
         self.tiles[y1][x1] = tile1
+        return True
 
-    def up(self, x0, y0, x1, y1):
+    def up(self, y0, x0, y1, x1):
         if y0 == 0 or y1 == 0:
-            self.shift_down()
-            return (x0, y0 + 1, x1, y1 + 1)
-        return (x0, y0 - 1, x1, y1 - 1)
-
-    def down(self, x0, y0, x1, y1):
-        if y0 == 4 or y1 == 4:
             self.shift_up()
-            return (x0, y0 - 1, x1, y1 - 1)
-        return (x0, y0 + 1, x1, y1 + 1)
+            return (y0, x0, y1, x1)
+        return (y0 - 1, x0, y1 - 1, x1)
 
-    def left(self, x0, y0, x1, y1):
+    def down(self, y0, x0, y1, x1):
+        if y0 == 4 or y1 == 4:
+            self.shift_down()
+            return (y0, x0, y1, x1)
+        return (y0 + 1, x0, y1 + 1, x1)
+
+    def left(self, y0, x0, y1, x1):
         if x0 == 0 or x1 == 0:
             self.shift_right()
-            return (x0 + 1, y0, x1 + 1, y1)
-        return (x0 - 1, y0, x1 - 1, y1)
+            return (y0, x0, y1, x1)
+        return (y0, x0 - 1, y1, x1 - 1)
 
-    def right(self, x0, y0, x1, y1):
+    def right(self, y0, x0, y1, x1):
         if x0 == 4 or x1 == 4:
             self.shift_left()
-            return (x0 - 1, y0, x1 - 1, y1)
-        return (x0 + 1, y0, x1 + 1, y1)
+            return (y0, x0, y1, x1)
+        return (y0, x0 + 1, y1, x1 + 1)
 
-    def rotate(self, x0, y0, x1, y1):
+    def rotate(self, y0, x0, y1, x1):
         # 90° rotation
         if y0 == y1 + 1: # left to right
             y1 = y0
@@ -76,33 +84,77 @@ class Board:
         elif x0 == x1 - 1: # down to up
             x1 = x0
             y1 = y0 + 1
-        return (x0, y0, x1, y1)
+        # edging cases
+        if y1 == -1:
+            y0 += 1
+            y1  += 1
+            self.shift_down()
+        elif y1 == 5:
+            y0 -= 1
+            y1 -= 1
+            self.shift_up()
+        elif x1 == -1:
+            x0 += 1
+            x1 += 1
+            self.shift_right()
+        elif x1 == 5:
+            x0 -= 1
+            x1 -= 1
+            self.shift_left()
+        return (y0, x0, y1, x1)
 
     def shift_down(self):
         # if bottom row is empty, shift all rows down
-        if all(tile.type == TileType.EMPTY for tile in self.tiles[-1]):
-            self.tiles = [[Tile(type=TileType.EMPTY) for x in range(5)]] + self.tiles[:-1]
+        if all(tile.type == TileType.EMPTY for tile in self.tiles[0]):
+            self.tiles = self.tiles[1:] + [[Tile(type=TileType.EMPTY) for x in range(5)]]
 
     def shift_up(self):
         # if top row is empty, shift all rows up
-        if all(tile.type == TileType.EMPTY for tile in self.tiles[0]):
-            self.tiles = self.tiles[1:] + [[Tile(type=TileType.EMPTY) for x in range(5)]]
+        if all(tile.type == TileType.EMPTY for tile in self.tiles[-1]):
+            self.tiles = [[Tile(type=TileType.EMPTY) for _ in range(5)]] + self.tiles[:-1]
 
     def shift_left(self):
         # if left column is empty, shift all columns left
         if all(row[0].type == TileType.EMPTY for row in self.tiles):
-            self.tiles = [[Tile(type=TileType.EMPTY)] for y in range(5)] + self.tiles[:-1]
+            # self.tiles = [[Tile(type=TileType.EMPTY)] for y in range(5)] + self.tiles[:-1]
+            for index, row in enumerate(self.tiles):
+                self.tiles[index] = row[1:] + [Tile(type=TileType.EMPTY)]
 
     def shift_right(self):
         # if right column is empty, shift all columns right
         if all(row[-1].type == TileType.EMPTY for row in self.tiles):
-            self.tiles = self.tiles[1:] + [[Tile(type=TileType.EMPTY)] for y in range(5)]
+            # self.tiles = self.tiles[1:] + [[Tile(type=TileType.EMPTY)] for y in range(5)]
+            for index, row in enumerate(self.tiles):
+                self.tiles[index] = [Tile(type=TileType.EMPTY)] + row[:-1]
 
-    def naibour(self, x, y, tile):
-        for i in range(-1, 1, 2):
-            for j in range(-1, 1, 2):
-                if self.tiles[y + i][x + j].type == tile.type or self.tiles[y + i][x + j].type == TileType.KING:
-                    return True
+    def naibour(self, y, x, tile):
+        cords = [(-1, 0),(0, -1),(1, 0),(0, 1)]
+        for cord in cords:
+            _y, _x = y + cord[0], x + cord[1]
+            if _y < 0 or _y > 4 or _x < 0 or _x > 4:
+                continue
+            if self.tiles[_y][_x].type == tile.type or self.tiles[_y][_x].type == TileType.KING:
+                return True
+
+    def get_score(self):
+        score = 0
+        for y, row in enumerate(self.tiles):
+            for x, tile in enumerate(row):
+                if tile.type != TileType.EMPTY:
+                    self.calc_score_nabor(y, x, tile)
+
+    def calc_score_nabor(self, y, x, tile, crowns=0, size=0):
+        crowns += tile.crowns
+        size += 1
+        self.tiles[y][x].type = TileType.EMPTY
+        cords = [(-1, 0),(0, -1),(1, 0),(0, 1)]
+        for cord in cords:
+            _y, _x = y + cord[0], x + cord[1]
+            if _y < 0 or _y > 4 or _x < 0 or _x > 4:
+                continue
+            if self.tiles[_y][_x].type == tile.type:
+                return self.calc_score_nabor(_y, _x, tile, crowns, size)
+        return crowns, size
 
 @dataclass
 class Player:
