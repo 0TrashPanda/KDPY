@@ -67,16 +67,16 @@ def interactive_board(board, domino, player):
     msg = ""
     while True:
         key = unicurses.getch()
-        if key == ord('w'):
+        if key == ord('z'):
             ofset = board.up(y0, x0, y1, x1)
             y0, x0, y1, x1 = ofset[0], ofset[1], ofset[2], ofset[3]
-        elif key == ord('r'):
+        elif key == ord('s'):
             ofset = board.down(y0, x0, y1, x1)
             y0, x0, y1, x1 = ofset[0], ofset[1], ofset[2], ofset[3]
-        elif key == ord('a'):
+        elif key == ord('q'):
             ofset = board.left(y0, x0, y1, x1)
             y0, x0, y1, x1 = ofset[0], ofset[1], ofset[2], ofset[3]
-        elif key == ord('s'):
+        elif key == ord('d'):
             ofset = board.right(y0, x0, y1, x1)
             y0, x0, y1, x1 = ofset[0], ofset[1], ofset[2], ofset[3]
         elif key == ord('r') or key == ord(' '):

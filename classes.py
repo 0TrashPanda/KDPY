@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 import random
 import numpy as np
+import copy
 
 class TileType(Enum):
     EMPTY = [" "]
@@ -13,15 +14,23 @@ class TileType(Enum):
     PLAINS = ["Y", "Ẏ", "Ÿ"] # ["🌿", "☘️", "🍀"]
     MINES = ["X", "Ẋ", "Ẍ"] # ["⛏️", "🛠️", "⚒️"]
 
-@dataclass
-class Tile:
+@dataclass()
+class Tile():
     type: TileType = field(default_factory=lambda: list(TileType)[np.random.randint(2, 8)])
     crowns: int = None
     number: int = 0
 
     def __post_init__(self):
+        if self.type is TileType.KING or self.type is TileType.EMPTY:
+            self.crowns = 0
+            return
+            # self.__setattr__("crowns", 0)
         if self.crowns is None:
             self.crowns = np.random.binomial(2, float(self.number) / 200)
+            # self.__setattr__("crowns", np.random.binomial(2, float(self.number) / 200))
+
+        if self.type is TileType.EMPTY and self.crowns != 0:
+            raise ValueError("Empty tiles cannot have crowns")
 
     def __str__(self):
         return self.type.value[self.crowns]
@@ -38,12 +47,14 @@ class Board:
 
 
     def place(self, y0, x0, y1, x1, tile0, tile1):
+        print(self)
         if self.tiles[y0][x0].type != TileType.EMPTY or self.tiles[y1][x1].type != TileType.EMPTY:
             return False
         if not self.naibour(y0, x0, tile0) and not self.naibour(y1, x1, tile1):
             return False
         self.tiles[y0][x0] = tile0
         self.tiles[y1][x1] = tile1
+        print(self)
         return True
 
     def up(self, y0, x0, y1, x1):
@@ -137,24 +148,30 @@ class Board:
                 return True
 
     def get_score(self):
+        tiles = copy.deepcopy(self.tiles)
         score = 0
-        for y, row in enumerate(self.tiles):
+        for y, row in enumerate(tiles):
             for x, tile in enumerate(row):
-                if tile.type != TileType.EMPTY:
-                    self.calc_score_nabor(y, x, tile)
+                if tile.type is not TileType.EMPTY and tile.type is not TileType.KING:
+                    # print(f"y: {y}, x: {x}, tile: {tile.type.name}")
+                    score += self.calc_score_nabor(tiles, y, x)
+        return score
 
-    def calc_score_nabor(self, y, x, tile, crowns=0, size=0):
+    def calc_score_nabor(self, tiles, y, x, crowns=0, size=0):
+        tile = tiles[y][x]
         crowns += tile.crowns
         size += 1
-        self.tiles[y][x].type = TileType.EMPTY
+        _tile = copy.deepcopy(tile)
+        tile.type = TileType.EMPTY
+        # print(f"y: {y}, x: {x}, tile: {tile.type}, _tile: {_tile.type}, crowns: {crowns}, size: {size}")
         cords = [(-1, 0),(0, -1),(1, 0),(0, 1)]
         for cord in cords:
             _y, _x = y + cord[0], x + cord[1]
             if _y < 0 or _y > 4 or _x < 0 or _x > 4:
                 continue
-            if self.tiles[_y][_x].type == tile.type:
-                return self.calc_score_nabor(_y, _x, tile, crowns, size)
-        return crowns, size
+            if tiles[_y][_x].type == _tile.type:
+                return self.calc_score_nabor(tiles, _y, _x, crowns, size)
+        return crowns * size
 
 @dataclass
 class Player:

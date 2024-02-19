@@ -132,5 +132,23 @@ class Test_Board(unittest.TestCase):
         Board.shift_right(board)
         self.assertEqual(board.tiles[1][4].type, TileType.KING)
 
+    def test_score(self):
+        # Define test board
+        board = Board(starting_board(1, 1))
+
+        self.assertEqual(board.get_score(), 0)
+
+        board.place(0, 1, 0, 2, Tile(type=TileType.FOREST, crowns=1), Tile(type=TileType.DESERT, crowns=0))
+        self.assertEqual(board.get_score(), 1)
+        board.place(0, 0, 1, 0, Tile(type=TileType.FOREST, crowns=1), Tile(type=TileType.WATER, crowns=0))
+        self.assertEqual(board.get_score(), 4)
+        board.place(0, 3, 0, 4, Tile(type=TileType.DESERT, crowns=1), Tile(type=TileType.WATER, crowns=0))
+        self.assertEqual(board.get_score(), 6)
+        board.place(1, 2, 2, 2, Tile(type=TileType.FOREST, crowns=0), Tile(type=TileType.WATER, crowns=1))
+        self.assertEqual(board.get_score(), 7)
+        board.place(2, 0, 2, 1, Tile(type=TileType.WATER, crowns=0), Tile(type=TileType.WATER, crowns=0))
+        self.assertEqual(board.get_score(), 10)
+
+
 if __name__ == '__main__':
     unittest.main()
