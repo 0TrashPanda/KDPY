@@ -2,6 +2,10 @@ from classes import Player, Board, Domino, StackPeace
 import random
 import os
 import unicurses
+try:
+    from keybinds import Keybinds as kb
+except ImportError:
+    from classes import Keybinds as kb
 
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -67,27 +71,27 @@ def interactive_board(board, domino, player):
     msg = ""
     while True:
         key = unicurses.getch()
-        if key == ord('z'):
+        if key == kb.UP.value:
             ofset = board.up(y0, x0, y1, x1)
             y0, x0, y1, x1 = ofset[0], ofset[1], ofset[2], ofset[3]
-        elif key == ord('s'):
+        elif key == kb.DOWN.value:
             ofset = board.down(y0, x0, y1, x1)
             y0, x0, y1, x1 = ofset[0], ofset[1], ofset[2], ofset[3]
-        elif key == ord('q'):
+        elif key == kb.LEFT.value:
             ofset = board.left(y0, x0, y1, x1)
             y0, x0, y1, x1 = ofset[0], ofset[1], ofset[2], ofset[3]
-        elif key == ord('d'):
+        elif key == kb.RIGHT.value:
             ofset = board.right(y0, x0, y1, x1)
             y0, x0, y1, x1 = ofset[0], ofset[1], ofset[2], ofset[3]
-        elif key == ord('r') or key == ord(' '):
+        elif key == kb.ROTATE.value or key == kb.ROTATE_SECOND.value:
             ofset = board.rotate(y0, x0, y1, x1)
             y0, x0, y1, x1 = ofset[0], ofset[1], ofset[2], ofset[3]
-        elif key == 10:
+        elif key == kb.PLACE.value:
             if board.place(y0, x0, y1, x1, tile0=domino.tile0, tile1=domino.tile1):
                 break
             else:
                 msg = "Invalid placement"
-        elif key == ord('x'):
+        elif key == kb.DISCARD.value:
             break
 
         unicurses.clear()

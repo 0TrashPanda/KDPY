@@ -199,3 +199,13 @@ class StackPeace:
     domino: Domino
     player_id: int = None
     player_name: str = None
+
+class Keybinds(Enum):
+    UP = ord("z")
+    DOWN = ord("s")
+    LEFT = ord("q")
+    RIGHT = ord("d")
+    PLACE = 10 # ENTER
+    ROTATE = ord("r")
+    ROTATE_SECOND = ord(" ")
+    DISCARD = ord("x")
