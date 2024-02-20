@@ -8,15 +8,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <link rel="stylesheet" href="{{ url_for('static',filename='css/output.css') }}">
 </head>
-<body class="bg-primary text-white">
+<body class="bg-primary text-white h-screen flex">
     <nav>
         <p hx-post="/logout" class="absolute top-2 right-4">exit</p>
+        <p class="absolute top-2 left-4">{{ current_user }}</p>
     </nav>
-    <main class="mx-auto container">
-        <h1 class="text-center text-2xl">KingDomino</h1>
-        {% for user in users.values() %}
-        <p>{{ user }}</p>
-        {% endfor %}
+    <main class="mx-auto container flex flex-col items-center">
+        <h1 class="text-center text-2xl top-0">KingDomino</h1>
+        <div class="w-64 m-auto flex flex-col justify-center">
+            <button hx-post="/create" hx-target="main" hx-swap="innerHTML">Create Game</button>
+            <button hx-post="/join">Join Game</button>
+        </div>
     </main>
 </body>
 

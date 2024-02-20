@@ -1,0 +1,30 @@
+<!-- menu -->
+<!-- start, end, copy session code, kick, players[] -->
+<!-- Path: menu.html -->
+
+<div>
+    <div class="flex flex-col items-center">
+        <div class="flex flex-col items-center">
+            <h2 class="text-center text-2xl top-0">Game Code</h2>
+            <input id="gameCode" class="w-64 m-auto" type="text" value="{{ gameCode }}" readonly>
+            <button hx-post="/copy" hx-target="#gameCode">Copy</button>
+        </div>
+        <div class="flex flex-col items-center">
+            <h2 class="text-center text-2xl top-0">Players</h2>
+            <div id="players" class="w-64 m-auto flex flex-col justify-center">
+                {% for player in game.players %}
+                    <p>{{ player }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="flex flex-col items-center">
+            <h2 class="text-center text-2xl top-0">Start Game</h2>
+            <button hx-post="/start">Start</button>
+        </div>
+        <div class="flex flex-col items-center">
+            <h2 class="text-center text-2xl top-0">Kick Player</h2>
+            <input id="kickPlayer" class="w-64 m-auto" type="text" placeholder="Player Name">
+            <button hx-post="/kick" hx-target="#kickPlayer">Kick</button>
+        </div>
+    </div>
+</div>

@@ -602,6 +602,10 @@ video {
   top: 0.5rem;
 }
 
+.left-4 {
+  left: 1rem;
+}
+
 .m-2 {
   margin: 0.5rem;
 }
@@ -643,6 +647,14 @@ video {
 
 .flex-col {
   flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
 }
 
 .rounded-md {

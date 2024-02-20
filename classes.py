@@ -176,7 +176,7 @@ class Board:
         return crowns * size
 
 @dataclass
-class Player(flask_login.UserMixin):
+class Player():
     name: str
     id: int = field(default_factory=count().__next__)
     score: int = 0
@@ -185,19 +185,8 @@ class Player(flask_login.UserMixin):
     def __str__(self):
         return self.name
 
-    __tablename__ = 'user'
-
-    def is_active(self):
-        return True
-
-    def get_id(self):
-        return self.id
-
-    def is_authenticated(self):
-        return True
-
-    def is_anonymous(self):
-        return False
+    def __eq__(self, other):
+        return self.id == other.id
 
 @dataclass
 class Domino:
