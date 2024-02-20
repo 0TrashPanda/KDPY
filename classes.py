@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
+from itertools import count
 from enum import Enum
 import random
+import flask_login
 import numpy as np
 import copy
 
@@ -174,11 +176,11 @@ class Board:
         return crowns * size
 
 @dataclass
-class Player:
+class Player(flask_login.UserMixin):
     name: str
-    id: int
-    score: int
-    board: Board
+    id: int = field(default_factory=count().__next__)
+    score: int = 0
+    board: Board = field(default_factory=Board)
 
     def __str__(self):
         return self.name

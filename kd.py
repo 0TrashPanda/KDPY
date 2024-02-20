@@ -117,30 +117,30 @@ def place_domino(stack, index):
     return stack[index].player_id
 
 clear()
-# players = int(input("Enter the number of players: "))
-# match players:
-#     case 2:
-#         total_kings = 4
-#         cards = 24
-#     case 3:
-#         total_kings = 3
-#         cards = 36
-#     case 4:
-#         total_kings = 4
-#         cards = 48
-#     case _:
-#         raise ValueError("Invalid number of players")
+players = int(input("Enter the number of players: "))
+match players:
+    case 2:
+        total_kings = 4
+        cards = 24
+    case 3:
+        total_kings = 3
+        cards = 36
+    case 4:
+        total_kings = 4
+        cards = 48
+    case _:
+        raise ValueError("Invalid number of players")
 
-# player_cage = []
-# for i in range(players):
-#     i = Player(input(f"Enter the name of player {i + 1}: "), i, 0, [])
-#     player_cage.append(i)
+player_cage = []
+for i in range(players):
+    i = Player(input(f"Enter the name of player {i + 1}: "))
+    player_cage.append(i)
 
-players = 2
-total_kings = 4
-cards = 24
-player_cage = [Player("Bob", 0, 0, Board()), Player("Alice", 1, 0, Board())]
-player_lounge = player_cage
+# players = 2
+# total_kings = 4
+# cards = 24
+# player_cage = [Player("Bob", 0, 0, Board()), Player("Alice", 1, 0, Board())]
+# player_lounge = player_cage
 
 random.shuffle(player_cage)
 if players == 2:
