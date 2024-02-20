@@ -185,6 +185,20 @@ class Player(flask_login.UserMixin):
     def __str__(self):
         return self.name
 
+    __tablename__ = 'user'
+
+    def is_active(self):
+        return True
+
+    def get_id(self):
+        return self.id
+
+    def is_authenticated(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
 @dataclass
 class Domino:
     tile0: Tile

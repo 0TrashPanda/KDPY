@@ -4,17 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KingDomino</title>
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='images/icons/speaker2.png') }}">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <link rel="stylesheet" href="{{ url_for('static',filename='css/output.css') }}">
 </head>
 <body class="bg-primary text-white">
+    <nav>
+        <p hx-post="/logout" class="absolute top-2 right-4">exit</p>
+    </nav>
     <main class="mx-auto container">
-        <h1>chose you username</h1>
-        <input id="username" name="username" hx-target="#user" hx-post="/login" class="bg-secondary text-dark focus:outline-none" type="text"></input>
-        <button hx-post="/login" hx-target="#user" hx-include="#username">Login</button>
-        <p id="user"></p>
+        <h1 class="text-center text-2xl">KingDomino</h1>
+        {% for user in users.values() %}
+        <p>{{ user }}</p>
+        {% endfor %}
     </main>
 </body>
 

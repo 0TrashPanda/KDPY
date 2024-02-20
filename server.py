@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, render_template_string, request, url_for
+from flask import Flask, abort, flash, redirect, render_template, render_template_string, request, url_for
 import flask_login
 from flask_socketio import SocketIO
 from classes import Tile, TileType, Domino, Board, Player
@@ -27,7 +27,9 @@ def handle_disconnect():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    if not flask_login.current_user.is_authenticated:
+        return render_template('login.html')
+    return render_template('index.html', users=users)
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -35,11 +37,14 @@ def login():
     user = users.get(username)
     if user is None:
         user = Player(username)
-        users[username] = user
+        users[user.id] = user
     else:
         user = Player(username)
     flask_login.login_user(user)
-    return redirect(url_for("protected"))
+    # next = request.args.get('next')
+    # if not url_has_allowed_host_and_scheme(next, request.host):
+    #     return abort(400)
+    return render_template('index.html', users=users), {'HX-Refresh': 'true'}
 
 @app.route("/protected")
 @flask_login.login_required
@@ -49,10 +54,10 @@ def protected():
         user=flask_login.current_user
     )
 
-@app.route("/logout")
+@app.route("/logout", methods=['POST'])
 def logout():
     flask_login.logout_user()
-    return "Logged out"
+    return render_template('login.html'), {'HX-Refresh': 'true'}
 
 if __name__ == '__main__':
     socketio.run(app, port=5000, debug=True)

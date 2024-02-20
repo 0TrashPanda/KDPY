@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KingDomino</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/output.css') }}">
+</head>
+
+<body class="h-screen flex flex-col bg-primary text-white">
+    <img class="absolute left-1/2 top-0 -translate-x-1/2" src="{{ url_for('static',filename='images/Kingdomino-Logo.png') }}" alt="">
+    <main class="m-auto w-64 flex flex-col">
+        <h1 class="m-2 text-center text-lg">chose you username</h1>
+        <input id="username" name="username" hx-target="body" hx-post="/login"class="p-2 m-2 text-center rounded-md bg-secondary text-dark focus:outline-none" type="text"></input>
+        <button hx-post="/login" hx-target="body" hx-include="#username" class="w-32 p-2 my-2 mx-auto bg-secondary rounded-md">Join Game</button>
+    </main>
+</body>
+
+</html>
