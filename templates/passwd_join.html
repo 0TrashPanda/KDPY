@@ -1,0 +1,8 @@
+<div class="flex flex-col w-64 m-auto">
+    <img class="absolute left-1/2 top-0 -translate-x-1/2" src="{{ url_for('static',filename='images/Kingdomino-Log.png') }}" alt="">
+    <h1 class="text-center">Enter game password:</h1>
+    <input id="passwd" type="text" name="passwd" hx-post="/join" hx-target="main" class="p-2 m-2 text-center rounded-md bg-secondary text-dark focus:outline-none">
+    <input id="game_id" type="hidden" name="game_id" value="{{ game_id }}">
+    <button hx-post="/join" hx-include="#passwd, #game_id" hx-target="main">Join</button>
+    <button hx-post="/find_games">Back</button>
+</div>

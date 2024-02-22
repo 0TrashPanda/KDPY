@@ -590,6 +590,10 @@ video {
   left: 50%;
 }
 
+.left-4 {
+  left: 1rem;
+}
+
 .right-4 {
   right: 1rem;
 }
@@ -600,10 +604,6 @@ video {
 
 .top-2 {
   top: 0.5rem;
-}
-
-.left-4 {
-  left: 1rem;
 }
 
 .m-2 {
@@ -624,8 +624,17 @@ video {
   margin-bottom: 0.5rem;
 }
 
+.my-auto {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
 .flex {
   display: flex;
+}
+
+.hidden {
+  display: none;
 }
 
 .h-screen {

@@ -11,10 +11,10 @@
 </head>
 
 <body class="h-screen flex flex-col bg-primary text-white">
-    <img class="absolute left-1/2 top-0 -translate-x-1/2" src="{{ url_for('static',filename='images/Kingdomino-Log.png') }}" alt="">
+    <img class="absolute left-1/2 top-0 -translate-x-1/2" src="{{ url_for('static',filename='images/Kingdomino-Logo.png') }}" alt="">
     <main class="m-auto w-64 flex flex-col">
         <h1 class="m-2 text-center text-lg">chose you username</h1>
-        <input id="username" name="username" hx-target="body" hx-post="/login"class="p-2 m-2 text-center rounded-md bg-secondary text-dark focus:outline-none" type="text"></input>
+        <input id="username" name="username" hx-target="body" hx-post="/login" class="p-2 m-2 text-center rounded-md bg-secondary text-dark focus:outline-none" type="text"></input>
         <button hx-post="/login" hx-target="body" hx-include="#username" class="w-32 p-2 my-2 mx-auto bg-secondary rounded-md">Join Game</button>
     </main>
 </body>

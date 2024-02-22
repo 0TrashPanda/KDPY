@@ -2,12 +2,18 @@ from itertools import count
 import time
 from classes import Player
 from dataclasses import dataclass, field
-
+import random
 
 @dataclass
 class Game():
     host: Player
+    passwd: str
+    is_anonymous: bool = field(default=False, init=False)
     players: list = field(default_factory=list)
+    id: int = field(init=False)
+
+    def __post_init__(self):
+        self.id = self.gen_id()
 
     def add_player(self, player):
         self.players.append(player)
@@ -18,6 +24,16 @@ class Game():
             self.host = self.players[0]
         if len(self.players) == 0:
             games.pop(self.id)
+
+    def get_player_count(self):
+        return len(self.players)
+
+    def gen_id(self):
+        id = random.randint(1000, 9999)
+        from server import games
+        if id in games:
+            return self.gen_id()
+        return id
 
 @dataclass
 class User():
@@ -56,6 +72,6 @@ class User():
     def is_anonymous(self):
         return False
 
-    def remove(self, games):
+    def leave_game(self):
         self.game.leave(self)
 
