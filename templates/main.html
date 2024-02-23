@@ -2,7 +2,7 @@
 {% block content %}
 <div class="bg-primary text-white h-screen flex">
     <nav>
-        <p hx-post="/logout" class="absolute top-2 right-4">exit</p>
+        <a class="absolute top-2 right-4" href="/logout">exit</a>
         <p class="absolute top-2 left-4">{{ current_user }}</p>
     </nav>
     <main class="mx-auto container flex flex-col items-center">

@@ -23,14 +23,14 @@ def load_user(id):
 
 @socketio.on('connect')
 def handle_connect():
-    print('Client connected')
     user = flask_login.current_user
     if not user.is_authenticated:
-        print('User is anonymous')
+        user = "Anonymous"
         return
+    print(f'{user} connected')
     user.join()
-    if user.game is not None:
-        socketio.emit('innerHTML', {'html': render_template('menu.html', game=user.game), 'div': 'main'})
+    # if user.game is not None:
+        # socketio.emit('innerHTML', {'html': render_template('menu.html', game=user.game), 'div': 'main'})
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -49,8 +49,8 @@ def delete_inactive_users():
 @app.route('/', methods=['GET'])
 def index():
     if not flask_login.current_user.is_authenticated:
-        return render_template('login.html')
-    return render_template('index.html', current_user=flask_login.current_user ,users=users)
+        return render_template('index.html')
+    return redirect(url_for('main'))
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -65,17 +65,24 @@ def login():
     # next = request.args.get('next')
     # if not url_has_allowed_host_and_scheme(next, request.host):
     #     return abort(400)
-    return render_template('main.html', current_user=flask_login.current_user)
+    return redirect(url_for('main'))
 
-@app.route("/logout", methods=['POST'])
+@app.route('/main', methods=['GET'])
+@login_required
+def main():
+    user = flask_login.current_user
+    return render_template('main.html', user=user)
+
+@app.route("/logout")
 @login_required
 def logout():
     user = flask_login.current_user
+    print(f'User {user} logged out')
     user.leave_game()
     user_id = user.id
     flask_login.logout_user()
     del users[user_id]
-    return render_template('login.html'), {'HX-Refresh': 'true'}
+    return redirect(url_for('index'))
 
 @app.route('/create', methods=['POST'])
 @login_required

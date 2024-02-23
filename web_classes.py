@@ -73,5 +73,6 @@ class User():
         return False
 
     def leave_game(self):
-        self.game.leave(self)
+        if self.game is not None:
+           self.game.leave(self)
 
