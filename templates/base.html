@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KingDomino</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/output.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='images/crown.png') }}">
+    <!-- <title>{% block title %}{% endblock %} - My Webpage</title> -->
+    {% endblock %}
+</head>
+<body>
+    <div id="content">{% block content %}{% endblock %}</div>
+    <div id="footer">
+        {% block footer %}
+        &copy; Copyright 2008 by <a href="http://domain.invalid/">you</a>.
+        {% endblock %}
+    </div>
+</body>
+<script type="text/javascript">
+    function clearThisID(target) {
+        document.getElementById(target).value = "";
+    }
+
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+    socket.on('connect', function() {
+        console.log('Connected to WebSocket server');
+    });
+
+    socket.on('disconnect', function() {
+        console.log('Disconnected from WebSocket server');
+    });
+
+    socket.on('innerHTML', function(data) {
+        var songContainer = document.querySelector(data.div); // Get the song container element
+        songContainer.innerHTML = data.html;
+        htmx.process(songContainer);
+    });
+
+    socket.on('outerHTML', function(data) {
+        var songContainer = document.querySelector(data.div); // Get the song container element
+        songContainer.outerHTML = data.html;
+        var songContainer = document.querySelector(data.div); // Get the song container element
+        htmx.process(songContainer);
+    });
+</script>
+</html>

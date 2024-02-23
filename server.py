@@ -40,14 +40,13 @@ def handle_disconnect():
     user.leave()
     print('Client disconnected')
 
-# Task to delete inactive user
 def delete_inactive_users():
     for user in list(users.values()):
         if user.is_gone():
             users.pop(user.id)
             print(f"User {user} is gone")
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
     if not flask_login.current_user.is_authenticated:
         return render_template('login.html')
@@ -66,7 +65,7 @@ def login():
     # next = request.args.get('next')
     # if not url_has_allowed_host_and_scheme(next, request.host):
     #     return abort(400)
-    return render_template('index.html',current_user=flask_login.current_user , users=users), {'HX-Refresh': 'true'}
+    return render_template('main.html', current_user=flask_login.current_user)
 
 @app.route("/logout", methods=['POST'])
 @login_required

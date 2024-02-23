@@ -7,4 +7,8 @@
     <input id="game_id" type="hidden" name="game_id" value="{{ game.id }}">
 </div>
 {% endfor %}
+{% if games|length == 0 %}
+    <p>No games found</p>
+    <a href="/create_game" class="p-2 m-2 text-center rounded-md bg-secondary text-dark focus:outline-none">Create Game</a>
+{% endif %}
 </div>
