@@ -121,7 +121,3 @@ class Games():
 
     def get_all(self):
         return self.games
-
-
-
-Game(host=User(username='111', id=0, player=Player(name='111', id=0, score=0), last_seen=0), passwd='123', is_anonymous=False, users=[User(username='111', id=0, player=Player(name='111', id=0, score=0), last_seen=0)], id=490800) 
