@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Create a new game</h1>
+    <form action="/create" method="post">
+        <input type="text" name="name" placeholder="Name" required>
+        <input type="text" name="passwd" placeholder="Password" required>
+        <input type="submit" value="Create">
+    </form>
+{% endblock %}

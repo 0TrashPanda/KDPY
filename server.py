@@ -12,6 +12,8 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 scheduler = APScheduler()
 
+login_manager.login_view = 'index'
+
 app.secret_key = 'super secret key'
 
 users = {}
@@ -83,6 +85,14 @@ def logout():
     flask_login.logout_user()
     del users[user_id]
     return redirect(url_for('index'))
+
+@app.route('/create_game')
+@login_required
+def create_game():
+    user = flask_login.current_user
+    if user.game is not None:
+        return render_template('menu.html', game=user.game)
+    return render_template('create_game.html')
 
 @app.route('/create', methods=['POST'])
 @login_required
