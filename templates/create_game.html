@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="flex flex-col w-64 m-auto h-screen justify-center items-center">
     <h1>Create a new game</h1>
-    <form action="/create" method="post">
-        <input type="text" name="name" placeholder="Name" required>
-        <input type="text" name="passwd" placeholder="Password" required>
-        <input type="submit" value="Create">
+    <form action="/create" method="post" class="flex items-center flex-col">
+        <input class="p-2 m-2 text-center rounded-md bg-secondary text-dark focus:outline-none" type="text" name="name" placeholder="Name" required>
+        <input class="p-2 m-2 text-center rounded-md bg-secondary text-dark focus:outline-none" type="text" name="passwd" placeholder="Password" required>
+        <input class="p-2 my-2 rounded-md bg-secondary text-dark" type="submit" value="Create">
     </form>
+</div>
 {% endblock %}

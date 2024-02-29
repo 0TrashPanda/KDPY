@@ -1,7 +1,5 @@
-<!-- menu -->
-<!-- start, end, copy session code, kick, players[] -->
-<!-- Path: menu.html -->
-
+{% extends "base.html" %}
+{% block content %}
     <div class="flex flex-col items-center my-auto">
         <div class="flex flex-col items-center">
             <h2 class="text-center text-2xl top-0">Game Code</h2>
@@ -11,14 +9,17 @@
         <div class="flex flex-col items-center">
             <h2 class="text-center text-2xl top-0">Players</h2>
             <div id="players" class="w-64 m-auto flex flex-col justify-center">
-                {% for player in game.players %}
+                {% for player in game.users %}
                     <p>{{ player }}</p>
                 {% endfor %}
             </div>
         </div>
+        {% if is_host %}
         <div class="flex flex-col items-center">
             <button hx-post="/start">Start Game</button>
             <button hx-post="/kick" hx-target="#kickPlayer">Kick Player</button>
-            <button hx-post="/stop">End Game</button>
+            <a href="/stop">End Game</a>
         </div>
+        {% endif %}
     </div>
+{% endblock %}

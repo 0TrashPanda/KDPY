@@ -9,31 +9,38 @@ class Game():
     host: Player
     passwd: str
     is_anonymous: bool = field(default=False, init=False)
-    players: list = field(default_factory=list)
+    users: list = field(default_factory=list)
     id: int = field(init=False)
 
     def __post_init__(self):
-        self.id = self.gen_id()
-
-    def add_player(self, player):
-        self.players.append(player)
-
-    def leave(self, user, games):
-        self.players.remove(user.player)
-        if self.host == user.player:
-            self.host = self.players[0]
-        if len(self.players) == 0:
-            games.pop(self.id)
-
-    def get_player_count(self):
-        return len(self.players)
-
-    def gen_id(self):
-        id = random.randint(1000, 9999)
         from server import games
-        if id in games:
-            return self.gen_id()
-        return id
+        self.id = games.gen_id()
+        self.users = [self.host]
+
+    def add_user(self, user):
+        self.users.append(user)
+
+    def leave(self, user):
+        from server import games
+        self.users.remove(user)
+        if self.user_count() == 0:
+            games.remove(self)
+            return
+        if self.host == user:
+            self.host = self.users[0]
+
+    def user_count(self):
+        return len(self.users)
+
+    def evacuate(self):
+        for user in self.users:
+            user.game = None
+        self.users = []
+        self.host = None
+
+    def is_host(self, user):
+        return self.host == user
+
 
 @dataclass
 class User():
@@ -41,7 +48,6 @@ class User():
     id: int = field(default_factory=count().__next__)
     player: Player = field(init=False)
     last_seen: float = field(default_factory=time.time)
-    game: Game = None
 
     def __str__(self):
         return self.username
@@ -73,6 +79,49 @@ class User():
         return False
 
     def leave_game(self):
-        if self.game is not None:
-           self.game.leave(self)
+        from server import games
+        game = games.user_game(self)
+        if game is not None:
+            game.leave(self, games)
 
+
+@dataclass
+class Games():
+    games: list = field(default_factory=list)
+
+    def __str__(self):
+        string = ""
+        for game in self.games:
+            string += f"{game}\n\n"
+        return string
+
+    def add(self, game):
+        self.games.append(game)
+
+    def get_game(self, id):
+        for game in self.games:
+            if game.id == id:
+                return game
+        return None
+
+    def user_game(self, user):
+        for game in self.games:
+            if user in game.users:
+                return game
+        return None
+
+    def remove(self, game):
+        self.games.remove(game)
+
+    def gen_id(self):
+        id = random.randint(0, 1000000)
+        while self.get_game(id) is not None:
+            id = random.randint(0, 1000000)
+        return id
+
+    def get_all(self):
+        return self.games
+
+
+
+Game(host=User(username='111', id=0, player=Player(name='111', id=0, score=0), last_seen=0), passwd='123', is_anonymous=False, users=[User(username='111', id=0, player=Player(name='111', id=0, score=0), last_seen=0)], id=490800) 

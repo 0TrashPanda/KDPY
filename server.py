@@ -4,7 +4,7 @@ import flask_login
 from flask_socketio import SocketIO
 from classes import Tile, TileType, Domino, Board, Player
 from flask_login import LoginManager, login_required
-from web_classes import Game, User
+from web_classes import Game, User, Games
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -17,7 +17,7 @@ login_manager.login_view = 'index'
 app.secret_key = 'super secret key'
 
 users = {}
-games = {}
+games = Games()
 
 @login_manager.user_loader
 def load_user(id):
@@ -31,8 +31,6 @@ def handle_connect():
         return
     print(f'{user} connected')
     user.join()
-    # if user.game is not None:
-        # socketio.emit('innerHTML', {'html': render_template('menu.html', game=user.game), 'div': 'main'})
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -54,19 +52,24 @@ def index():
         return render_template('index.html')
     return redirect(url_for('main'))
 
+@app.route('/eval', methods=['GET', 'POST'])
+def evaluate():
+    user = flask_login.current_user
+    if request.method == 'GET':
+        return render_template('eval.html')
+    code = request.form.get('code')
+    try:
+        result = str(eval(code))
+    except Exception as e:
+        result = str(e)
+    return result
+
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form.get('username')
-    user = users.get(username)
-    if user is None:
-        user = User(username)
-        users[user.id] = user
-    else:
-        user = User(username)
+    user = User(username)
+    users[user.id] = user
     flask_login.login_user(user)
-    # next = request.args.get('next')
-    # if not url_has_allowed_host_and_scheme(next, request.host):
-    #     return abort(400)
     return redirect(url_for('main'))
 
 @app.route('/main', methods=['GET'])
@@ -80,89 +83,80 @@ def main():
 def logout():
     user = flask_login.current_user
     print(f'User {user} logged out')
+    global games
     user.leave_game()
     user_id = user.id
     flask_login.logout_user()
     del users[user_id]
     return redirect(url_for('index'))
 
-@app.route('/create_game')
+@app.route('/create-game')
 @login_required
 def create_game():
     user = flask_login.current_user
-    if user.game is not None:
-        return render_template('menu.html', game=user.game)
+    game = games.user_game(user)
+    if game is not None:
+        return render_template('menu.html', game=game, is_host=game.is_host(user))
     return render_template('create_game.html')
 
 @app.route('/create', methods=['POST'])
 @login_required
 def create():
     user = flask_login.current_user
-    if user.game is not None:
-        return render_template('menu.html', game=user.game)
+    game = games.user_game(user)
+    if game is not None:
+        return render_template('menu.html', game=game, is_host=game.is_host(user))
     passwd = request.form.get('passwd')
-    player = flask_login.current_user.player
-    game = Game(host=player, passwd=passwd)
-    game.players.append(player)
-    user.game = game
-    games[game.id] = game
-    return render_template('menu.html', game=game)
+    game = Game(host=user, passwd=passwd)
+    games.add(game)
+    return render_template('menu.html', game=game, is_host=True)
 
-@app.route('/passwd', methods=['POST'])
-@login_required
-def passwd():
-    user = flask_login.current_user
-    if user.game is not None:
-        return render_template('menu.html', game=user.game)
-    return render_template('passwd.html', user=user)
-
-@app.route('/stop', methods=['POST'])
+@app.route('/stop')
 @login_required
 def stop():
     user = flask_login.current_user
-    if user.game is not None:
-        try:
-            del games[user.game.id]
-        except KeyError:
-            pass
-        user.game = None
-    return render_template('index.html', current_user=flask_login.current_user ,users=users), {'HX-Refresh': 'true'}
+    game = games.user_game(user)
+    if game is not None:
+        game.evacuate()
+        games.remove(game)
+    return redirect(url_for('main'))
 
-@app.route('/find_game', methods=['POST'])
+@app.route('/find-games')
 @login_required
 def find_game():
     user = flask_login.current_user
-    if user.game is not None:
-        return render_template('menu.html', game=user.game)
-    return render_template('find_game.html', games=games.values())
+    game = games.user_game(user)
+    if game is not None:
+        return render_template('menu.html', game=game, is_host=game.is_host(user))
+    return render_template('find_game.html', games=games.get_all())
 
-@app.route('/passwd_join', methods=['POST'])
+@app.route('/join-passwd/<game_id>')
 @login_required
-def passwd_join():
+def passwd_join(game_id):
     user = flask_login.current_user
-    if user.game is not None:
-        return render_template('menu.html', game=user.game)
-    game_id = request.form.get('game_id')
+    game = games.user_game(user)
+    if game is not None:
+        return render_template('menu.html', game=user.game, is_host=game.is_host(user))
     return render_template('passwd_join.html', game_id=game_id)
 
 @app.route('/join', methods=['POST'])
 @login_required
 def join():
     user = flask_login.current_user
-    if user.game is not None:
-        return render_template('menu.html', game=user.game)
+    game = games.user_game(user)
+    if game is not None:
+        return render_template('menu.html', game=game, is_host=game.is_host(user))
     game_id = request.form.get('game_id')
-    game = games.get(int(game_id))
+    if game_id is None:
+        return redirect(url_for('main'))
+    game = games.get_game(game_id)
     if game is None:
-        flash('Game does not exist')
-        return render_template('index.html', current_user=flask_login.current_user ,users=users), {'HX-Refresh': 'true'}
+        return redirect(url_for('main'))
     if game.passwd != request.form.get('passwd'):
         print('Invalid password')
-        return render_template('index.html', current_user=flask_login.current_user ,users=users), {'HX-Refresh': 'true'}
-    player = flask_login.current_user.player
-    game.players.append(player)
-    user.game = game
-    return render_template('menu.html', game=game)
+        return redirect(url_for(f'join-passwd/{game_id}'))
+    game.add_user(user)
+    return render_template('menu.html', game=game, is_host=game.is_host(user))
 
 scheduler.add_job(id='cleanup_job', func=delete_inactive_users, trigger='interval', seconds=5)
 scheduler.start()

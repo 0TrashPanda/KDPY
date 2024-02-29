@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bg-primary text-white h-screen flex flex-col justify-center items-center">
+    <h1 class="text-center text-2xl top-0">Eval</h1>
+    <input class="p-2 m-2 text-center rounded-md bg-secondary text-dark focus:outline-none" hx-post="/eval" hx-target="#result" hx-swap="innerHTML" type="text" name="code">
+    <p id="result"></p>
+</div>
+{% endblock %}

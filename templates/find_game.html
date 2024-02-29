@@ -1,14 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
 <div class="flex flex-col w-64 m-auto">
+    {% include "nav.html" %}
 {% for game in games %}
 <div class="flex items-center">
     <p>CODE: {{ game.id}}</p>
-    <p>PLAYERS: {{ game.get_player_count() }}</p>
-    <button hx-post="/passwd_join" hx-include="#game_id" hx-target="main" class="p-2 m-2 text-center rounded-md bg-secondary text-dark focus:outline-none">Join</button>
-    <input id="game_id" type="hidden" name="game_id" value="{{ game.id }}">
+    <p>PLAYERS: {{ game.get_user_count() }}</p>
+    <a href="/join-passwd/{{ game.id }}" class="p-2 m-2 text-center rounded-md bg-secondary text-dark focus:outline-none">Join</a>
 </div>
 {% endfor %}
 {% if games|length == 0 %}
     <p>No games found</p>
-    <a href="/create_game" class="p-2 m-2 text-center rounded-md bg-secondary text-dark focus:outline-none">Create Game</a>
+    <a href="/create-game" class="p-2 m-2 text-center rounded-md bg-secondary text-dark focus:outline-none">Create Game</a>
 {% endif %}
 </div>
+{% endblock %}
