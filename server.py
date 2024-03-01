@@ -75,6 +75,7 @@ def login():
 @app.route('/main', methods=['GET'])
 @login_required
 def main():
+    flash('Hello, ' + flask_login.current_user.username)
     user = flask_login.current_user
     return render_template('main.html', user=user)
 
@@ -150,9 +151,11 @@ def join():
         return render_template('menu.html', game=game, is_host=game.is_host(user.id))
     game_id = request.form.get('game_id')
     if game_id is None:
+        flash('no game id')
         return redirect(url_for('main'))
     game = games.get_game(game_id)
     if game is None:
+        flash('Invalid game id')
         return redirect(url_for('main'))
     if game.passwd != request.form.get('passwd'):
         print('Invalid password')

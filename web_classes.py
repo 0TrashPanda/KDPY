@@ -94,15 +94,17 @@ class Games():
     games: list = field(default_factory=list)
 
     def __str__(self):
+        from server import users
         string = ""
         for game in self.games:
-            string += f"id: {game.id} host: {game.host.username} passwd:{game.passwd} users: {[user.username for user in game.users]}\n"
+            string += f"id: {game.id} host: {users.get(game.host).username} passwd:{game.passwd} users: {[users.get(user).username for user in game.users]}\n"
         return string
 
     def add(self, game):
         self.games.append(game)
 
     def get_game(self, id):
+        print(f'Looking for game {id}')
         for game in self.games:
             if game.id == id:
                 return game
@@ -118,9 +120,9 @@ class Games():
         self.games.remove(game)
 
     def gen_id(self):
-        id = random.randint(0, 1000000)
+        id = random.randint(1000, 9999)
         while self.get_game(id) is not None:
-            id = random.randint(0, 1000000)
+            id = random.randint(1000, 9999)
         return id
 
     def get_all(self):
