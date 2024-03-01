@@ -41,6 +41,10 @@ class Game():
     def is_host(self, user):
         return self.host == user
 
+    def usersnames(self):
+        from server import users
+        return [users.get(user_id) for user_id in self.users]
+
 
 @dataclass
 class User():
@@ -92,7 +96,7 @@ class Games():
     def __str__(self):
         string = ""
         for game in self.games:
-            string += f"{game}\n\n"
+            string += f"id: {game.id} host: {game.host.username} passwd:{game.passwd} users: {[user.username for user in game.users]}\n"
         return string
 
     def add(self, game):

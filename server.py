@@ -94,9 +94,9 @@ def logout():
 @login_required
 def create_game():
     user = flask_login.current_user
-    game = games.user_game(user)
+    game = games.user_game(user.id)
     if game is not None:
-        return render_template('menu.html', game=game, is_host=game.is_host(user))
+        return render_template('menu.html', game=game, is_host=game.is_host(user.id))
     return render_template('create_game.html')
 
 @app.route('/create', methods=['POST'])
@@ -105,9 +105,9 @@ def create():
     user = flask_login.current_user
     game = games.user_game(user)
     if game is not None:
-        return render_template('menu.html', game=game, is_host=game.is_host(user))
+        return render_template('menu.html', game=game, is_host=game.is_host(user.id))
     passwd = request.form.get('passwd')
-    game = Game(host=user, passwd=passwd)
+    game = Game(host=user.id, passwd=passwd)
     games.add(game)
     return render_template('menu.html', game=game, is_host=True)
 
@@ -115,7 +115,7 @@ def create():
 @login_required
 def stop():
     user = flask_login.current_user
-    game = games.user_game(user)
+    game = games.user_game(user.id)
     if game is not None:
         game.evacuate()
         games.remove(game)
@@ -125,27 +125,29 @@ def stop():
 @login_required
 def find_game():
     user = flask_login.current_user
-    game = games.user_game(user)
+    game = games.user_game(user.id)
     if game is not None:
-        return render_template('menu.html', game=game, is_host=game.is_host(user))
+        print(f'User {user} is already in game {game}')
+        return render_template('menu.html', game=game, is_host=game.is_host(user.id))
     return render_template('find_game.html', games=games.get_all())
 
 @app.route('/join-passwd/<game_id>')
 @login_required
 def passwd_join(game_id):
     user = flask_login.current_user
-    game = games.user_game(user)
+    game = games.user_game(user.id)
     if game is not None:
-        return render_template('menu.html', game=user.game, is_host=game.is_host(user))
+        return render_template('menu.html', game=game, is_host=game.is_host(user.id))
     return render_template('passwd_join.html', game_id=game_id)
 
 @app.route('/join', methods=['POST'])
 @login_required
 def join():
     user = flask_login.current_user
-    game = games.user_game(user)
+    game = games.user_game(user.id)
     if game is not None:
-        return render_template('menu.html', game=game, is_host=game.is_host(user))
+        print(f'User {user} is already in game {game}')
+        return render_template('menu.html', game=game, is_host=game.is_host(user.id))
     game_id = request.form.get('game_id')
     if game_id is None:
         return redirect(url_for('main'))
@@ -156,7 +158,7 @@ def join():
         print('Invalid password')
         return redirect(url_for(f'join-passwd/{game_id}'))
     game.add_user(user)
-    return render_template('menu.html', game=game, is_host=game.is_host(user))
+    return render_template('menu.html', game=game, is_host=game.is_host(user.id))
 
 scheduler.add_job(id='cleanup_job', func=delete_inactive_users, trigger='interval', seconds=5)
 scheduler.start()

@@ -9,7 +9,7 @@
         <div class="flex flex-col items-center">
             <h2 class="text-center text-2xl top-0">Players</h2>
             <div id="players" class="w-64 m-auto flex flex-col justify-center">
-                {% for player in game.users %}
+                {% for player in game.usersnames() %}
                     <p>{{ player }}</p>
                 {% endfor %}
             </div>

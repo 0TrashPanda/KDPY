@@ -5,7 +5,7 @@
 {% for game in games %}
 <div class="flex items-center">
     <p>CODE: {{ game.id}}</p>
-    <p>PLAYERS: {{ game.get_user_count() }}</p>
+    <p>PLAYERS: {{ game.user_count() }}</p>
     <a href="/join-passwd/{{ game.id }}" class="p-2 m-2 text-center rounded-md bg-secondary text-dark focus:outline-none">Join</a>
 </div>
 {% endfor %}
