@@ -3,7 +3,9 @@ import time
 from classes import Player
 from dataclasses import dataclass, field
 import random
+from classes import Tile, TileType, Domino, Board, Player, StackPeace
 
+users = {}
 @dataclass
 class Game():
     host: Player
@@ -11,6 +13,8 @@ class Game():
     is_anonymous: bool = field(default=False, init=False)
     users: list = field(default_factory=list)
     id: int = field(init=False)
+    total_kings: int = field(init=False)
+    cards: int = field(init=False)
 
     def __post_init__(self):
         from server import games
@@ -42,8 +46,43 @@ class Game():
         return self.host == user
 
     def usersnames(self):
-        from server import users
         return [users.get(user_id) for user_id in self.users]
+
+    def start(self):
+        match len(self.users):
+            case 2:
+                self.total_kings = 4
+                self.cards = 24
+            case 3:
+                self.total_kings = 3
+                self.cards = 36
+            case 4:
+                self.total_kings = 4
+                self.cards = 48
+            case _:
+                raise ValueError("Invalid number of players")
+        from server import socketio
+        for user in self.users:
+            socketio.emit('start_game', {}, room=users.get(user).sid)
+        time.sleep(1)
+        random.shuffle(self.users)
+        if len(self.users) == 2:
+            self.users += self.users
+        old_stack = self.get_new_stack()
+        for player in self.users:
+            self.choose_tile(player, old_stack)
+
+    def get_new_stack(self):
+        stack = []
+        for _ in range(self.total_kings):
+            stack.append(StackPeace(Domino()))
+        stack.sort(key=lambda x: x.domino.number)
+        self.cards -= self.total_kings
+        return stack
+
+    def choose_tile(self, player, stack):
+        from server import socketio
+        socketio.emit('choose_tile', {'stack': stack, 'player': player}, room=users.get(player).sid)
 
 
 @dataclass
@@ -51,6 +90,7 @@ class User():
     username: str
     id: int = field(default_factory=count().__next__)
     player: Player = field(init=False)
+    sid: str = field(default=None)
     last_seen: float = field(default_factory=time.time)
 
     def __str__(self):
@@ -104,7 +144,10 @@ class Games():
         self.games.append(game)
 
     def get_game(self, id):
-        print(f'Looking for game {id}')
+        try:
+            id = int(id)
+        except ValueError:
+            return None
         for game in self.games:
             if game.id == id:
                 return game

@@ -3,3 +3,4 @@
 keybinds.py
 .gitignore
 test.py
+node_modules

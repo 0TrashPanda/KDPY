@@ -16,8 +16,7 @@
         </div>
         {% if is_host %}
         <div class="flex flex-col items-center">
-            <button hx-post="/start">Start Game</button>
-            <button hx-post="/kick" hx-target="#kickPlayer">Kick Player</button>
+            <a href="/start-game">Start Game</a>
             <a href="/stop">End Game</a>
         </div>
         {% endif %}

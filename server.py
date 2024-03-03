@@ -1,10 +1,9 @@
 from flask_apscheduler import APScheduler
-from flask import Flask, abort, flash, redirect, render_template, render_template_string, request, url_for
+from flask import Flask, abort, flash, make_response, redirect, render_template, render_template_string, request, url_for
 import flask_login
 from flask_socketio import SocketIO
-from classes import Tile, TileType, Domino, Board, Player
 from flask_login import LoginManager, login_required
-from web_classes import Game, User, Games
+from web_classes import Game, User, Games, users
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -16,7 +15,6 @@ login_manager.login_view = 'index'
 
 app.secret_key = 'super secret key'
 
-users = {}
 games = Games()
 
 @login_manager.user_loader
@@ -26,6 +24,7 @@ def load_user(id):
 @socketio.on('connect')
 def handle_connect():
     user = flask_login.current_user
+    user.sid = request.sid
     if not user.is_authenticated:
         user = "Anonymous"
         return
@@ -35,6 +34,7 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     user = flask_login.current_user
+    user.sid = None
     if not user.is_authenticated:
         return
     user.leave()
@@ -160,8 +160,30 @@ def join():
     if game.passwd != request.form.get('passwd'):
         print('Invalid password')
         return redirect(url_for(f'join-passwd/{game_id}'))
-    game.add_user(user)
+    game.add_user(user.id)
     return render_template('menu.html', game=game, is_host=game.is_host(user.id))
+
+@app.route('/start-game')
+@login_required
+def start_game():
+    user = flask_login.current_user
+    game = games.user_game(user.id)
+    if game is None:
+        return redirect(url_for('main'))
+    if not game.is_host(user.id):
+        return redirect(url_for('main'))
+    game.start()
+    return make_response('', 204)
+
+@app.route('/game')
+@login_required
+def game():
+    user = flask_login.current_user
+    game = games.user_game(user.id)
+    if game is None:
+        return redirect(url_for('main'))
+    return render_template('game.html', game=game)
+
 
 scheduler.add_job(id='cleanup_job', func=delete_inactive_users, trigger='interval', seconds=5)
 scheduler.start()

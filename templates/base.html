@@ -15,7 +15,7 @@
 <body class="bg-primary text-white">
     {% with messages = get_flashed_messages() %}
     {% if messages %}
-        <ul class="flashes p-4 bg-dark text-primary absolute top-1/2 right-1/2 -translate-x-1/2 -translate-y-1/2">
+        <ul class="flashes p-4 bg-dark text-primary absolute bottom-0 left-1/2 -translate-x-1/2">
         {% for message in messages %}
         <li>{{ message }}</li>
         {% endfor %}
@@ -50,6 +50,11 @@
         songContainer.outerHTML = data.html;
         var songContainer = document.querySelector(data.div); // Get the song container element
         htmx.process(songContainer);
+    });
+
+    socket.on('start_game', function(data) {
+        console.log('Game started');
+        window.location.href = '/game';
     });
 </script>
 </html>
