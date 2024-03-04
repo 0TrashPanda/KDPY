@@ -40,17 +40,27 @@
     });
 
     socket.on('innerHTML', function(data) {
-        var div = document.querySelector(data.div);
         console.log('replacing innerHTML');
+        console.log(data);
+        var div = document.querySelector(data.div);
         div.innerHTML = data.html;
         htmx.process(div);
     });
 
     socket.on('outerHTML', function(data) {
+        console.log('replacing outerHTML');
+        console.log(data);
         var div = document.querySelector(data.div);
         div.outerHTML = data.html;
         var div = document.querySelector(data.div);
         htmx.process(div);
+    });
+
+    socket.on('remove', function(data) {
+        console.log('removing element');
+        console.log(data);
+        var div = document.querySelector(data.div);
+        div.remove();
     });
 
     socket.on('message', function(data) {

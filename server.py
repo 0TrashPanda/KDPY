@@ -205,9 +205,7 @@ def start_game():
     if status is not None:
         flash(status)
         return redirect(url_for('menu'))
-    # for user_id in game.users:
-    #     send_start_game(game, user_id)
-    return make_response('', 204)
+    return redirect(url_for('game'))
 
 @app.route('/game')
 @login_required
@@ -217,6 +215,19 @@ def game():
     if game is None:
         return redirect(url_for('main'))
     return render_template('game.html', game=game)
+
+@app.route('/start', methods=['POST'])
+@login_required
+def start():
+    user = flask_login.current_user
+    game = games.user_game(user.id)
+    if game is None:
+        return redirect(url_for('main'))
+    for user_id in game.users:
+        socketio.emit('remove', {'div': '#start'}, room=users[user_id].sid)
+    user_id = game.users[0]
+    socketio.emit('innerHTML', {'html': game.choose_tile(), 'div': '#terminal'}, room=users[user_id].sid)
+    return "", 204
 
 
 # scheduler.add_job(id='cleanup_job', func=delete_inactive_users, trigger='interval', seconds=5)

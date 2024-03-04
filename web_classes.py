@@ -12,9 +12,11 @@ class Game():
     passwd: str
     is_anonymous: bool = field(default=False, init=False)
     users: list = field(default_factory=list)
+    user_cage: list = field(default_factory=list)
     id: int = field(init=False)
-    total_kings: int = field(init=False)
+    total_kings: int = field(init=False, default=0)
     cards: int = field(init=False)
+    stack: list = field(init=False)
 
     def __post_init__(self):
         from server import games
@@ -60,17 +62,14 @@ class Game():
                 self.total_kings = 4
                 self.cards = 48
             case _:
-                send_start_game(self, user_id)
-                return
-        from server import send_start_game
+                return "Invalid number of players"
         for user_id in self.users:
             send_start_game(self, user_id)
-        random.shuffle(self.users)
-        if len(self.users) == 2:
-            self.users += self.users
-        old_stack = self.get_new_stack()
-        for player in self.users:
-            self.choose_tile(player, old_stack)
+        self.user_cage = self.users.copy()
+        random.shuffle(self.user_cage)
+        if len(self.user_cage) == 2:
+            self.user_cage += self.user_cage
+        self.stack = self.get_new_stack()
 
     def get_new_stack(self):
         stack = []
@@ -80,9 +79,12 @@ class Game():
         self.cards -= self.total_kings
         return stack
 
-    def choose_tile(self, player, stack):
-        from server import socketio
-        socketio.emit('choose_tile', {'stack': stack, 'player': player}, room=users.get(player).sid)
+    def choose_tile(self):
+        string = ""
+        for index, domino in enumerate(self.stack):
+            string += f"{index + 1}\t\t{domino.domino.tile0}\t{domino.domino.tile1}\t\t{domino.player_name if domino.player_id != None else ''}".expandtabs(2)
+            string += "\n"
+        return string
 
 
 @dataclass
