@@ -15,7 +15,7 @@
 <body class="bg-primary text-white">
     {% with messages = get_flashed_messages() %}
     {% if messages %}
-        <ul class="flashes p-4 bg-dark text-primary absolute bottom-0 left-1/2 -translate-x-1/2">
+        <ul id="messages" class="flashes p-4 bg-dark text-primary absolute bottom-0 left-1/2 -translate-x-1/2">
         {% for message in messages %}
         <li>{{ message }}</li>
         {% endfor %}
@@ -40,21 +40,39 @@
     });
 
     socket.on('innerHTML', function(data) {
-        var songContainer = document.querySelector(data.div); // Get the song container element
-        songContainer.innerHTML = data.html;
-        htmx.process(songContainer);
+        var div = document.querySelector(data.div);
+        console.log('replacing innerHTML');
+        div.innerHTML = data.html;
+        htmx.process(div);
     });
 
     socket.on('outerHTML', function(data) {
-        var songContainer = document.querySelector(data.div); // Get the song container element
-        songContainer.outerHTML = data.html;
-        var songContainer = document.querySelector(data.div); // Get the song container element
-        htmx.process(songContainer);
+        var div = document.querySelector(data.div);
+        div.outerHTML = data.html;
+        var div = document.querySelector(data.div);
+        htmx.process(div);
     });
 
-    socket.on('start_game', function(data) {
+    socket.on('message', function(data) {
+        console.log('Received message:', data);
+
+        // Example: Update the UI with the received message
+        $('#messages').append('<li>' + data + '</li>');
+
+        // Set a timeout to remove the message after 5 seconds
+        setTimeout(function() {
+            $('#messages li').first().remove(); // Remove the oldest (first) message
+        }, 5000); // 5000 milliseconds = 5 seconds
+    });
+
+    socket.on('startGame', function(data) {
         console.log('Game started');
         window.location.href = '/game';
+    });
+
+    socket.on('refresh_game_menu', function(data) {
+        console.log('Refreshing game menu');
+        window.location.href = '/game_menu';
     });
 </script>
 </html>

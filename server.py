@@ -31,6 +31,25 @@ def handle_connect():
     print(f'{user} connected')
     user.join()
 
+def emit_message(user_id, message):
+    user = users.get(user_id)
+    sid = user.sid
+    socketio.emit('message', {'message': message}, room=sid)
+
+def send_start_game(game, user_id):
+    user = users.get(user_id)
+    print(f'sending start game to {user}')
+    sid = user.sid
+    socketio.emit('startGame', {'game': None}, room=sid)
+
+def emit_refresh_menu_players(game):
+    for user_id in game.users:
+        user = users.get(user_id)
+        print(f'refreshing menu for user {user}')
+        sid = user.sid
+        players = render_template_string('{% for player in game.usersnames() %}<p>{{ player }}</p>{% endfor %}', game=game)
+        socketio.emit('innerHTML', {'html': players, 'div': '#players'}, room=sid)
+
 @socketio.on('disconnect')
 def handle_disconnect():
     user = flask_login.current_user
@@ -38,7 +57,7 @@ def handle_disconnect():
     if not user.is_authenticated:
         return
     user.leave()
-    print('Client disconnected')
+    print(f'{user} disconnected')
 
 def delete_inactive_users():
     for user in list(users.values()):
@@ -97,7 +116,7 @@ def create_game():
     user = flask_login.current_user
     game = games.user_game(user.id)
     if game is not None:
-        return render_template('menu.html', game=game, is_host=game.is_host(user.id))
+        return redirect(url_for('menu'))
     return render_template('create_game.html')
 
 @app.route('/create', methods=['POST'])
@@ -106,11 +125,11 @@ def create():
     user = flask_login.current_user
     game = games.user_game(user)
     if game is not None:
-        return render_template('menu.html', game=game, is_host=game.is_host(user.id))
+        return redirect(url_for('menu'))
     passwd = request.form.get('passwd')
     game = Game(host=user.id, passwd=passwd)
     games.add(game)
-    return render_template('menu.html', game=game, is_host=True)
+    return redirect(url_for('menu'))
 
 @app.route('/stop')
 @login_required
@@ -122,6 +141,15 @@ def stop():
         games.remove(game)
     return redirect(url_for('main'))
 
+@app.route('/menu')
+@login_required
+def menu():
+    user = flask_login.current_user
+    game = games.user_game(user.id)
+    if game is None:
+        return redirect(url_for('main'))
+    return render_template('menu.html', game=game, is_host=game.is_host(user.id))
+
 @app.route('/find-games')
 @login_required
 def find_game():
@@ -129,7 +157,7 @@ def find_game():
     game = games.user_game(user.id)
     if game is not None:
         print(f'User {user} is already in game {game}')
-        return render_template('menu.html', game=game, is_host=game.is_host(user.id))
+        return redirect(url_for('menu'))
     return render_template('find_game.html', games=games.get_all())
 
 @app.route('/join-passwd/<game_id>')
@@ -138,7 +166,7 @@ def passwd_join(game_id):
     user = flask_login.current_user
     game = games.user_game(user.id)
     if game is not None:
-        return render_template('menu.html', game=game, is_host=game.is_host(user.id))
+        return redirect(url_for('menu'))
     return render_template('passwd_join.html', game_id=game_id)
 
 @app.route('/join', methods=['POST'])
@@ -148,7 +176,7 @@ def join():
     game = games.user_game(user.id)
     if game is not None:
         print(f'User {user} is already in game {game}')
-        return render_template('menu.html', game=game, is_host=game.is_host(user.id))
+        return redirect(url_for('menu'))
     game_id = request.form.get('game_id')
     if game_id is None:
         flash('no game id')
@@ -161,7 +189,8 @@ def join():
         print('Invalid password')
         return redirect(url_for(f'join-passwd/{game_id}'))
     game.add_user(user.id)
-    return render_template('menu.html', game=game, is_host=game.is_host(user.id))
+    emit_refresh_menu_players(game)
+    return redirect(url_for('menu'))
 
 @app.route('/start-game')
 @login_required
@@ -172,7 +201,12 @@ def start_game():
         return redirect(url_for('main'))
     if not game.is_host(user.id):
         return redirect(url_for('main'))
-    game.start()
+    status = game.start(send_start_game)
+    if status is not None:
+        flash(status)
+        return redirect(url_for('menu'))
+    # for user_id in game.users:
+    #     send_start_game(game, user_id)
     return make_response('', 204)
 
 @app.route('/game')
@@ -185,8 +219,8 @@ def game():
     return render_template('game.html', game=game)
 
 
-scheduler.add_job(id='cleanup_job', func=delete_inactive_users, trigger='interval', seconds=5)
-scheduler.start()
+# scheduler.add_job(id='cleanup_job', func=delete_inactive_users, trigger='interval', seconds=5)
+# scheduler.start()
 
 if __name__ == '__main__':
-    socketio.run(app, port=5000, debug=True)
+    socketio.run(app, port=5002, debug=True)

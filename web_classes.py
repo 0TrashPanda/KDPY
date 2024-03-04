@@ -48,7 +48,7 @@ class Game():
     def usersnames(self):
         return [users.get(user_id) for user_id in self.users]
 
-    def start(self):
+    def start(self, send_start_game):
         match len(self.users):
             case 2:
                 self.total_kings = 4
@@ -60,11 +60,11 @@ class Game():
                 self.total_kings = 4
                 self.cards = 48
             case _:
-                raise ValueError("Invalid number of players")
-        from server import socketio
-        for user in self.users:
-            socketio.emit('start_game', {}, room=users.get(user).sid)
-        time.sleep(1)
+                send_start_game(self, user_id)
+                return
+        from server import send_start_game
+        for user_id in self.users:
+            send_start_game(self, user_id)
         random.shuffle(self.users)
         if len(self.users) == 2:
             self.users += self.users
