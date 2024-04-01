@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from itertools import count
 from enum import Enum
 import random
-import flask_login
 import numpy as np
 import copy
 
